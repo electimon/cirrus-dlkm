@@ -101,6 +101,8 @@ struct wm_adsp {
 	unsigned int fw_id;
 	unsigned int fw_id_version;
 	unsigned int fw_vendor_id;
+	unsigned int *alg_ver;
+	size_t n_algs;
 
 	const struct wm_adsp_region *mem;
 	int num_mems;
@@ -110,7 +112,8 @@ struct wm_adsp {
 
 	bool preloaded;
 	bool booted;
-	bool running;
+	bool running;	
+	bool tuning_has_prefix;
 
 	int num_firmwares;
 	struct wm_adsp_fw_defs *firmwares;
@@ -128,7 +131,6 @@ struct wm_adsp {
 	struct mutex pwr_lock;
 
 	unsigned int lock_regions;
-	bool unlock_all;
 
 	unsigned int n_rx_channels;
 	unsigned int n_tx_channels;
@@ -234,6 +236,10 @@ int wm_adsp_compr_pointer(struct snd_compr_stream *stream,
 			  struct snd_compr_tstamp *tstamp);
 int wm_adsp_compr_copy(struct snd_compr_stream *stream,
 		       char __user *buf, size_t count);
+int wm_adsp_write_ctl(struct wm_adsp *dsp, const char *name, const void *buf,
+		      size_t len);
+int wm_adsp_read_ctl(struct wm_adsp *dsp, const char *name, void *buf,
+		     size_t len);
 
 extern int wm_adsp_handle_fw_event(struct wm_adsp *dsp);
 

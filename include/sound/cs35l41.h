@@ -35,6 +35,8 @@ struct cs35l41_platform_data {
 	bool right_channel;
 	bool amp_gain_zc;
 	bool ng_enable;
+	bool tuning_has_prefix;
+	bool hibernate_enable;
 	int bst_ind;
 	int bst_vctrl;
 	int bst_ipk;
@@ -46,6 +48,19 @@ struct cs35l41_platform_data {
 	struct irq_cfg irq_config1;
 	struct irq_cfg irq_config2;
 	struct classh_cfg classh_config;
+	int regs_patch_size;
+	struct reg_sequence *regs_patch;
+};
+
+struct cs35l41_rst_cache {
+	bool extclk_cfg;
+	int asp_width;
+	int asp_wl;
+	int asp_fmt;
+	int lrclk_fmt;
+	int sclk_fmt;
+	int slave_mode;
+	int fs_cfg;
 };
 
 struct cs35l41_private {
@@ -61,22 +76,37 @@ struct cs35l41_private {
 	int extclk_freq;
 	int extclk_cfg;
 	int sclk;
-	unsigned int cspl_cmd;
 	unsigned int gpi_glob_en;
+	int lrclk_fmt;
+	int sclk_fmt;
+	int amp_hibernate;
+	bool reload_tuning;
 	bool dspa_mode;
 	bool i2s_mode;
 	bool swire_mode;
 	bool halo_booted;
 	bool enabled;
 	bool bus_spi;
-	struct mutex rate_lock;
+	bool fast_switch_en;
+	bool force_int;
+	bool hibernate_force_wake;
 	/* GPIO for /RST */
 	struct gpio_desc *reset_gpio;
-	struct completion global_pup_done;
-	struct completion global_pdn_done;
+	/* Run-time mixer */
+	unsigned int fast_switch_file_idx;
+	struct soc_enum fast_switch_enum;
+	const char **fast_switch_names;
+	struct mutex rate_lock;
+	struct mutex force_int_lock;
+	struct delayed_work hb_work;
+	struct workqueue_struct *wq;
+	struct mutex hb_lock;
+	struct cs35l41_rst_cache reset_cache;
+	unsigned int ctl_cache[CS35L41_CTRL_CACHE_SIZE];
 };
 
 int cs35l41_probe(struct cs35l41_private *cs35l41,
 				struct cs35l41_platform_data *pdata);
+int cs35l41_remove(struct cs35l41_private *cs35l41);
 
 #endif /* __CS35L41_H */

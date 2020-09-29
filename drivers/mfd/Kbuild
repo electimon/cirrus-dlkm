@@ -1,7 +1,16 @@
 # add -Wall to try to catch everything we can.
 EXTRA_CFLAGS += -Wall
 EXTRA_CFLAGS += -I$(TOP)/vendor/cirrus/audio/dlkm/include
-EXTRA_CFLAGS += -DCONFIG_MFD_CS47L35 -DCONFIG_MFD_CS47L90
 
-cirrus_madera-core-objs = madera-core.o madera-spi.o cs47l35-tables.o cs47l90-tables.o
+ifeq ($(CONFIG_ARCH_SDM450), y)
+EXTRA_CFLAGS += -DCONFIG_MFD_CS47L35
+cirrus_madera-core-objs = madera-core.o madera-spi.o madera-core.o madera-spi.o cs47l35-tables.o
+else ifeq ($(CONFIG_ARCH_SM6150), y)
+EXTRA_CFLAGS += -DCONFIG_MFD_CS47L35
+cirrus_madera-core-objs = madera-core.o madera-spi.o madera-core.o madera-spi.o cs47l35-tables.o
+else
+EXTRA_CFLAGS += -DCONFIG_MFD_CS47L90
+cirrus_madera-core-objs = madera-core.o madera-spi.o madera-core.o madera-spi.o cs47l90-tables.o
+endif
+
 obj-m += cirrus_madera-core.o
