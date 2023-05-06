@@ -739,7 +739,6 @@ static int cs35l36_pcm_hw_params(struct snd_pcm_substream *substream,
 		asp_width = CS35L36_ASP_WIDTH_32;
 		break;
 	default:
-		dev_err(cs35l36->dev, "Invalid params_width supplied");
 		return -EINVAL;
 	}
 
