@@ -3,5 +3,7 @@ EXTRA_CFLAGS += -Wall
 EXTRA_CFLAGS += -I$(TOP)/vendor/cirrus/audio/dlkm/include
 
 cirrus_irq-madera-objs = irq-madera.o
+cirrus_irq-madera-cs47l90-objs = irq-madera-cs47l90.o
 
 obj-m += cirrus_irq-madera.o
+obj-m += cirrus_irq-madera-cs47l90.o
