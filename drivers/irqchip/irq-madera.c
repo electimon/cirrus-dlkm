@@ -155,6 +155,7 @@ static struct irq_chip madera_irq_chip = {
 };
 
 static struct lock_class_key madera_irq_lock_class;
+static struct lock_class_key madera_irq_request_class;
 
 static int madera_irq_map(struct irq_domain *h, unsigned int virq,
 			  irq_hw_number_t hw)
@@ -162,7 +163,7 @@ static int madera_irq_map(struct irq_domain *h, unsigned int virq,
 	struct madera_irq_priv *priv = h->host_data;
 
 	irq_set_chip_data(virq, priv);
-	irq_set_lockdep_class(virq, &madera_irq_lock_class);
+	irq_set_lockdep_class(virq, &madera_irq_lock_class, &madera_irq_request_class);
 	irq_set_chip_and_handler(virq, &madera_irq_chip, handle_simple_irq);
 	irq_set_nested_thread(virq, true);
 
@@ -439,3 +440,5 @@ module_platform_driver(madera_irq_driver);
 MODULE_DESCRIPTION("Madera IRQ driver");
 MODULE_AUTHOR("Richard Fitzgerald <rf@opensource.wolfsonmicro.com>");
 MODULE_LICENSE("GPL v2");
+MODULE_SOFTDEP("pre: cirrus_irq_madera_cs47l90");
+MODULE_SOFTDEP("pre: cirrus_irq_madera_cs47l35");

@@ -123,3 +123,4 @@ const struct regmap_irq_chip cs47l90_irq = {
 	.num_irqs = ARRAY_SIZE(cs47l90_irqs),
 };
 EXPORT_SYMBOL_GPL(cs47l90_irq);
+MODULE_LICENSE("GPL v2");

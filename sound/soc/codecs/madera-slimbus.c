@@ -52,20 +52,21 @@ static void madera_slim_fixup_prop(struct slim_ch *prop,
 
 #define TX_STREAM_1 128
 #define TX_STREAM_2 132
-#define TX_STREAM_3 131
+#define TX_STREAM_3 134
 
 #define RX_STREAM_1 144
 #define RX_STREAM_2 146
 #define RX_STREAM_3 148
 
 static u32 rx_porth1[2], rx_porth2[2], rx_porth3[2];
-static u32 tx_porth1[3], tx_porth2[2], tx_porth3[1];
+static u32 tx_porth1[4], tx_porth2[2], tx_porth3[2];
 static u16 rx_handles1[] = { RX_STREAM_1, RX_STREAM_1 + 1 };
 static u16 rx_handles2[] = { RX_STREAM_2, RX_STREAM_2 + 1 };
 static u16 rx_handles3[] = { RX_STREAM_3, RX_STREAM_3 + 1 };
-static u16 tx_handles1[] = { TX_STREAM_1, TX_STREAM_1 + 1, TX_STREAM_1 + 2};
+static u16 tx_handles1[] = { TX_STREAM_1, TX_STREAM_1 + 1,
+			     TX_STREAM_1 + 2, TX_STREAM_1 + 3 };
 static u16 tx_handles2[] = { TX_STREAM_2, TX_STREAM_2 + 1 };
-static u16 tx_handles3[] = { TX_STREAM_3 };
+static u16 tx_handles3[] = { TX_STREAM_3, TX_STREAM_3 + 1 };
 static u16 rx_group1, rx_group2, rx_group3;
 static u16 tx_group1, tx_group2, tx_group3;
 
@@ -73,8 +74,8 @@ int madera_slim_tx_ev(struct snd_soc_dapm_widget *w,
 		      struct snd_kcontrol *kcontrol,
 		      int event)
 {
-	struct snd_soc_codec *codec = snd_soc_dapm_to_codec(w->dapm);
-	struct madera_priv *priv = snd_soc_codec_get_drvdata(codec);
+	struct snd_soc_component *component = snd_soc_dapm_to_component(w->dapm);
+	struct madera_priv *priv = snd_soc_component_get_drvdata(component);
 	struct madera *madera = priv->madera;
 	struct slim_ch prop;
 	int ret = 0, i;
@@ -112,8 +113,8 @@ int madera_slim_tx_ev(struct snd_soc_dapm_widget *w,
 		handles = tx_handles2;
 		group = &tx_group2;
 		break;
-	case MADERA_SLIMTX4_ENA_SHIFT:
-		dev_dbg(codec->dev, "TX3\n");
+	case MADERA_SLIMTX7_ENA_SHIFT:
+		dev_dbg(component->dev, "TX3\n");
 		chcnt = priv->tx_chan_map_num[2];
 		if (chcnt > ARRAY_SIZE(tx_porth3)) {
 			dev_err(madera->dev, "ERROR: Too many TX channels\n");
@@ -182,8 +183,8 @@ int madera_slim_rx_ev(struct snd_soc_dapm_widget *w,
 		      struct snd_kcontrol *kcontrol,
 		      int event)
 {
-	struct snd_soc_codec *codec = snd_soc_dapm_to_codec(w->dapm);
-	struct madera_priv *priv = snd_soc_codec_get_drvdata(codec);
+	struct snd_soc_component *component = snd_soc_dapm_to_component(w->dapm);
+	struct madera_priv *priv = snd_soc_component_get_drvdata(component);
 	struct madera *madera = priv->madera;
 	struct slim_ch prop;
 	int ret = 0, i;
@@ -227,7 +228,7 @@ int madera_slim_rx_ev(struct snd_soc_dapm_widget *w,
 		rx_samplerate = priv->rx2_samplerate;
 		break;
 	case MADERA_SLIMRX3_ENA_SHIFT:
-		dev_dbg(codec->dev, "RX3\n");
+		dev_dbg(component->dev, "RX3\n");
 		chcnt = priv->rx_chan_map_num[2];
 		if (chcnt > ARRAY_SIZE(rx_porth3)) {
 			dev_err(madera->dev, "ERROR: Too many RX channels\n");
@@ -297,7 +298,7 @@ int madera_set_channel_map(struct snd_soc_dai *dai,
 			   unsigned int tx_num, unsigned int *tx_slot,
 			   unsigned int rx_num, unsigned int *rx_slot)
 {
-	struct madera_priv *priv = snd_soc_codec_get_drvdata(dai->codec);
+	struct madera_priv *priv = snd_soc_component_get_drvdata(dai->component);
 	struct madera *madera = priv->madera;
 
 	u8 laddr;
@@ -317,12 +318,12 @@ int madera_set_channel_map(struct snd_soc_dai *dai,
 
 	/*
 	 * same reason with stashed_slim_dev, there is no clever way to link
-	 * codec and slimbus driver on madera based platform. whenever codec
-	 * calls slimbus driver, it will keep its client codec pointer and use
-	 * it as a bridge to call codec related functions.
+	 * component and slimbus driver on madera based platform. whenever codec
+	 * calls slimbus driver, it will keep its client component pointer and use
+	 * it as a bridge to call component related functions.
 	 */
-	if (dai->codec != NULL)
-		slim_set_clientdata(stashed_slim_dev, dai->codec);
+	if (dai->component != NULL)
+		slim_set_clientdata(stashed_slim_dev, dai->component);
 
 	if (!priv->slim_logic_addr) {
 		madera_slim_get_la(stashed_slim_dev, &laddr);
@@ -332,7 +333,7 @@ int madera_set_channel_map(struct snd_soc_dai *dai,
 	}
 
 	switch (dai->id) {
-	case 4: /* cs47l35-slim1 */
+	case 4: /* cs47l35-slim1, cs47l90-slim1 */
 		tx_porth = tx_porth1;
 		tx_handles = tx_handles1;
 		tx_chcnt = ARRAY_SIZE(tx_porth1);
@@ -349,7 +350,7 @@ int madera_set_channel_map(struct snd_soc_dai *dai,
 		rx_priv_counter = &priv->rx_chan_map_num[0];
 		rx_chan_map_slot = priv->rx_chan_map_slot[0];
 		break;
-	case 5: /* cs47l35-slim2 */
+	case 5: /* cs47l35-slim2, cs47l90-slim2 */
 		tx_porth = tx_porth2;
 		tx_handles = tx_handles2;
 		tx_chcnt = ARRAY_SIZE(tx_porth2);
@@ -365,6 +366,23 @@ int madera_set_channel_map(struct snd_soc_dai *dai,
 		rx_stream_idx = RX_STREAM_2;
 		rx_priv_counter = &priv->rx_chan_map_num[1];
 		rx_chan_map_slot = priv->rx_chan_map_slot[1];
+		break;
+	case 6: /* cs47l90-slim3 */
+		tx_porth = tx_porth3;
+		tx_handles = tx_handles3;
+		tx_chcnt = ARRAY_SIZE(tx_porth3);
+		tx_idx_step = 14;
+		tx_stream_idx = TX_STREAM_3;
+		tx_priv_counter = &priv->tx_chan_map_num[2];
+		tx_chan_map_slot = priv->tx_chan_map_slot[2];
+
+		rx_porth = rx_porth3;
+		rx_handles = rx_handles3;
+		rx_chcnt = ARRAY_SIZE(rx_porth3);
+		rx_idx_step = 6;
+		rx_stream_idx = RX_STREAM_3;
+		rx_priv_counter = &priv->rx_chan_map_num[2];
+		rx_chan_map_slot = priv->rx_chan_map_slot[2];
 		break;
 	default:
 		dev_err(madera->dev, "set_channel_map unknown dai->id %d\n",
@@ -421,7 +439,7 @@ int madera_get_channel_map(struct snd_soc_dai *dai,
 			   unsigned int *tx_num, unsigned int *tx_slot,
 			   unsigned int *rx_num, unsigned int *rx_slot)
 {
-	struct madera_priv *priv = snd_soc_codec_get_drvdata(dai->codec);
+	struct madera_priv *priv = snd_soc_component_get_drvdata(dai->component);
 	struct madera *madera = priv->madera;
 	int i;
 	int tx_chan_map_num, rx_chan_map_num;
@@ -439,6 +457,12 @@ int madera_get_channel_map(struct snd_soc_dai *dai,
 		rx_chan_map_num = priv->rx_chan_map_num[1];
 		tx_chan_map_slot = priv->tx_chan_map_slot[1];
 		rx_chan_map_slot = priv->rx_chan_map_slot[1];
+		break;
+	case 6: /* cs47l90-slim3 */
+		tx_chan_map_num = priv->tx_chan_map_num[2];
+		rx_chan_map_num = priv->rx_chan_map_num[2];
+		tx_chan_map_slot = priv->tx_chan_map_slot[2];
+		rx_chan_map_slot = priv->rx_chan_map_slot[2];
 		break;
 	default:
 		dev_err(madera->dev, "get_channel_map unknown dai->id %d\n",
@@ -479,15 +503,15 @@ static int madera_slim_audio_probe(struct slim_device *slim)
 
 static int madera_slim_device_reset(struct slim_device *slim)
 {
-	struct snd_soc_codec *codec;
+	struct snd_soc_component *component;
 
 	if (slim == NULL)
 		return -EINVAL;
 
-	codec = slim_get_devicedata(slim);
-	if (codec != NULL) {
+	component = slim_get_devicedata(slim);
+	if (component != NULL) {
 		dev_info(&slim->dev, "%s handle SLIM RESET\n", __func__);
-		snd_soc_card_change_online_state(codec->component.card, 1);
+		snd_soc_card_change_online_state(component->card, 1);
 	}
 
 	return 0;
@@ -495,15 +519,15 @@ static int madera_slim_device_reset(struct slim_device *slim)
 
 static int madera_slim_device_down(struct slim_device *slim)
 {
-	struct snd_soc_codec *codec;
+	struct snd_soc_component *component;
 
 	if (slim == NULL)
 		return -EINVAL;
 
-	codec = slim_get_devicedata(slim);
-	if (codec != NULL) {
+	component = slim_get_devicedata(slim);
+	if (component != NULL) {
 		dev_info(&slim->dev, "%s handle SLIM DOWN\n", __func__);
-		snd_soc_card_change_online_state(codec->component.card, 0);
+		snd_soc_card_change_online_state(component->card, 0);
 	}
 
 	return 0;

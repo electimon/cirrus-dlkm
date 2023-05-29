@@ -472,7 +472,7 @@ extern int madera_eq_coeff_put(struct snd_kcontrol *kcontrol,
 extern int madera_lhpf_coeff_put(struct snd_kcontrol *kcontrol,
 				 struct snd_ctl_elem_value *ucontrol);
 
-extern int madera_set_sysclk(struct snd_soc_codec *codec, int clk_id,
+extern int madera_set_sysclk(struct snd_soc_component *component, int clk_id,
 			     int source, unsigned int freq, int dir);
 extern int madera_get_legacy_dspclk_setting(struct madera *madera,
 					    unsigned int freq);
@@ -504,36 +504,36 @@ extern int madera_set_fll_ao_refclk(struct madera_fll *fll, int source,
 
 extern int madera_core_init(struct madera_priv *priv);
 extern int madera_core_destroy(struct madera_priv *priv);
-extern int madera_init_spk(struct snd_soc_codec *codec, int n_channels);
-extern int madera_free_spk(struct snd_soc_codec *codec);
-extern int madera_init_drc(struct snd_soc_codec *codec);
-extern int madera_init_inputs(struct snd_soc_codec *codec,
+extern int madera_init_spk(struct snd_soc_component *component, int n_channels);
+extern int madera_free_spk(struct snd_soc_component *component);
+extern int madera_init_drc(struct snd_soc_component *component);
+extern int madera_init_inputs(struct snd_soc_component *component,
 			      const char * const *dmic_inputs,
 			      int n_dmic_inputs,
 			      const char * const *dmic_refs,
 			      int n_dmic_refs);
-extern int madera_init_outputs(struct snd_soc_codec *codec);
-extern int madera_init_bus_error_irq(struct snd_soc_codec *codec, int dsp_num,
+extern int madera_init_outputs(struct snd_soc_component *component);
+extern int madera_init_bus_error_irq(struct snd_soc_component *component, int dsp_num,
 				     irq_handler_t handler);
-extern void madera_destroy_bus_error_irq(struct snd_soc_codec *codec,
+extern void madera_destroy_bus_error_irq(struct snd_soc_component *component,
 					 int dsp_num);
 
 extern int madera_init_dai(struct madera_priv *priv, int dai);
 
-extern int madera_set_output_mode(struct snd_soc_codec *codec, int output,
+extern int madera_set_output_mode(struct snd_soc_component *component, int output,
 				  bool diff);
 
 /* Following functions are for use by machine drivers */
-extern int madera_set_custom_jd(struct snd_soc_codec *codec,
+extern int madera_set_custom_jd(struct snd_soc_component *component,
 				const struct madera_jd_state *custom_jd,
 				unsigned int index);
 
-extern int madera_enable_force_bypass(struct snd_soc_codec *codec);
-extern int madera_disable_force_bypass(struct snd_soc_codec *codec);
+extern int madera_enable_force_bypass(struct snd_soc_component *component);
+extern int madera_disable_force_bypass(struct snd_soc_component *component);
 
-extern int madera_register_notifier(struct snd_soc_codec *codec,
+extern int madera_register_notifier(struct snd_soc_component *component,
 				    struct notifier_block *nb);
-extern int madera_unregister_notifier(struct snd_soc_codec *codec,
+extern int madera_unregister_notifier(struct snd_soc_component *component,
 				      struct notifier_block *nb);
 
 extern const struct snd_soc_dai_ops madera_slim_dai_ops;
